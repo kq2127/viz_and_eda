@@ -9,14 +9,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-    ## -- Attaching packages -----------------
+    ## -- Attaching packages --------------
 
     ## v ggplot2 3.2.1     v purrr   0.3.2
     ## v tibble  2.1.3     v dplyr   0.8.3
     ## v tidyr   1.0.0     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.4.0
 
-    ## -- Conflicts --------------------------
+    ## -- Conflicts -----------------------
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -239,3 +239,142 @@ weather_df %>%
     ## Warning: Removed 3 rows containing missing values (geom_point).
 
 ![](visualization_i_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+
+## Some extra stuff
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_smooth(size = 2, se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+## you just get smooth line with out data points if you exclude the geopoint. 
+```
+
+2d density
+
+``` r
+# install.packages("hexbin")
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d() # or geom_hex()
+```
+
+    ## Warning: Removed 15 rows containing non-finite values (stat_bin2d).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+## More kinds of plots\!\!
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmax, color = name)) +
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_bin).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+#color is telling you about what is outside of the bars, fill if for inside
+
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_bin).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+
+``` r
+#if you dont like stacked histograms you can do the following 
+
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram(position = "dodge")
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_bin).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-12-3.png)<!-- -->
+
+``` r
+#to make three seperate histograms
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram() +
+  facet_grid(~name)
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_bin).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-12-4.png)<!-- -->
+
+density plots\!\!\!
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_density(alpha = .3)
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_density).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+univariate plots\!\!
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_boxplot).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+violin plot\!\!
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_violin()
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_ydensity).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+ridge plots\!\!\!
+
+good for bimodal and multi group comparisons
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmax, y = name)) +
+  geom_density_ridges()
+```
+
+    ## Picking joint bandwidth of 1.84
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_density_ridges).
+
+![](visualization_i_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->

@@ -117,3 +117,82 @@ weather_df %>%
   geom_smooth(se = FALSE)
 ```
 
+## Some extra stuff
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_smooth(size = 2, se = FALSE)
+## you just get smooth line with out data points if you exclude the geopoint. 
+```
+
+2d density
+
+```{r}
+# install.packages("hexbin")
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d() # or geom_hex()
+```
+
+## More kinds of plots!!
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmax, color = name)) +
+  geom_histogram()
+
+#color is telling you about what is outside of the bars, fill if for inside
+
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram()
+
+#if you dont like stacked histograms you can do the following 
+
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram(position = "dodge")
+
+#to make three seperate histograms
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram() +
+  facet_grid(~name)
+```
+
+density plots!!!
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_density(alpha = .3)
+```
+
+univariate plots!!
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_boxplot()
+```
+
+violin plot!!
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = name, y = tmax)) +
+  geom_violin()
+```
+
+ridge plots!!! 
+
+good for bimodal and multi group comparisons
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmax, y = name)) +
+  geom_density_ridges()
+```
+
+
