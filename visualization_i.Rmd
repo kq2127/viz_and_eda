@@ -5,26 +5,115 @@ date: "10/2/2019"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggridges)
 ```
 
-## R Markdown
+## Create Weather Data
+```{r load_data, cache =TRUE}
+weather_df = 
+  rnoaa::meteo_pull_monitors(c("USW00094728", "USC00519397", "USS0023B17S"),
+                      var = c("PRCP", "TMIN", "TMAX"), 
+                      date_min = "2017-01-01",
+                      date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY", 
+                      USC00519397 = "Waikiki_HA",
+                      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+## create a ggplot
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+ggplot(weather_df, aes(x= tmin, y=tmax)) +
+ geom_point()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## alternate way of making plot above
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax)) +
+  geom_point()
+```
+
+
+saving initial plots... mostly teacher doesnt do this 
+
+```{r}
+scatterplot = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y= tmax)) +
+  geom_point()
+
+scatterplot
+```
+
+adding color...
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax)) +
+  geom_point(aes(color = name))
+
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax)) +
+  geom_point(aes(color = name), alpha = .4)
+##alpha code makes the color dot transparent between 0-1
+```
+
+why do aesthetic positions matter?
+
+first
+```{r}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax)) +
+  geom_point(aes(color = name), alpha = .4)+
+  geom_smooth(se = FALSE)
+```
+
+vs.
+```{r}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax, color = name)) +
+  geom_point(alpha = .4) +
+  geom_smooth(se = FALSE)
+```
+
+make the one graph into three graphs for each weather station
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax, color = name)) +
+  geom_point(alpha = .4) +
+  geom_smooth(se = FALSE) + #se = false is to get rid of CI
+  facet_grid(~name) #says that names wil be in the columns, ~ is a tilda
+```
+
+this is fine, but not interesting
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+#to make the data points proportional to size of precip and to make the smooth line bigger
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha =.35) +
+  geom_smooth(size = 2, se = FALSE)
+  
+weather_df %>% 
+  ggplot(aes(x = date, y = prcp, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
