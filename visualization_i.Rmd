@@ -195,4 +195,30 @@ weather_df %>%
   geom_density_ridges()
 ```
 
+##saving a plot
 
+```{r}
+ggp_rideg_temp =
+  weather_df %>% 
+  ggplot(aes(x = tmax, y = name)) +
+  geom_density_ridges()
+
+ggsave("ggplot_temp_ridge.pdf", ggp_rideg_temp)
+```
+
+embedding plots in R markdown
+
+```{r, fig.width = 6}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax, color = name)) +
+  geom_point(alpha = .4) +
+  geom_smooth(se = FALSE)
+```
+
+
+```{r, fig.width = 12}
+weather_df %>% 
+  ggplot(aes(x =tmin, y = tmax, color = name)) +
+  geom_point(alpha = .4) +
+  geom_smooth(se = FALSE)
+```
