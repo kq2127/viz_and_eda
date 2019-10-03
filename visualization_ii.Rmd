@@ -1,0 +1,189 @@
+---
+title: "Visualization II"
+author: "Kristal Quispe"
+date: "10/3/2019"
+output: github_document
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggridges)
+```
+
+## Create Weather Data
+```{r load_data, cache =TRUE}
+weather_df = 
+  rnoaa::meteo_pull_monitors(c("USW00094728", "USC00519397", "USS0023B17S"),
+                      var = c("PRCP", "TMIN", "TMAX"), 
+                      date_min = "2017-01-01",
+                      date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY", 
+                      USC00519397 = "Waikiki_HA",
+                      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+
+```
+
+## Making new plots
+
+start with an old one
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5)
+
+```
+
+So now we are going to add labels:
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  labs(
+    title = "Temperture plot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    caption = "Data from NOAA via rnoaa package"
+  )
+
+```
+
+lets play around with scales: x axis tick marks etc
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  labs(
+    title = "Temperture plot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    caption = "Data from NOAA via rnoaa package"
+  ) +
+  scale_x_continuous(
+    breaks = c(-15, -5, 20),
+    labels = c("-15C","-5C", "20C" )
+  )
+
+```
+
+
+If you need a log or square root transfromation
+```{r}
+
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  labs(
+    title = "Temperture plot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    caption = "Data from NOAA via rnoaa package"
+  ) +
+  scale_x_continuous(
+    breaks = c(-15, -5, 20),
+    labels = c("-15C","-5C", "20C" )
+  ) +
+  scale_y_continuous(
+    trans ="sqrt"
+  )
+
+#or you can do...
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  labs(
+    title = "Temperture plot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    caption = "Data from NOAA via rnoaa package"
+  ) +
+  scale_x_continuous(
+    breaks = c(-15, -5, 20),
+    labels = c("-15C","-5C", "20C" )
+  ) +
+  scale_y_sqrt()
+```
+
+## Colors next
+
+```{r}
+## to change the default colors ggplot sets use a scale color function...
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  labs(
+    title = "Temperture plot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    caption = "Data from NOAA via rnoaa package"
+  ) +
+  scale_color_hue(
+    name = "Location",
+    h = c(50, 250)
+    #name is the key legend name, not the variable name
+  )
+```
+
+viridis package... gives us more color options
+
+```{r}
+ggp_base =
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  labs(
+    title = "Temperture plot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    caption = "Data from NOAA via rnoaa package"
+  ) +
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE ##variable here is a discrete variable, need to specify this. 
+  )
+
+ggp_base
+```
+
+## themes
+```{r}
+## theme has to do with general organization functions, here i am moving legend to the bottom
+ggp_base +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+#If you want a black and white back drop
+ggp_base +
+  theme_bw ()+
+  theme(legend.position = "bottom")
+```
+
+```{r}
+#If you want a minimal theme back drop, aka get rid of the black out line in grpah
+ggp_base +
+  theme_minimal ()+
+  theme(legend.position = "bottom")
+
+#theme minimal has to happen before them legened position, b/c theme minimal is applying a specfic lengend. Over arching themes go first aka like theme minimal, and any tweeks, like them lengend position go after. 
+```
+
+```{r}
+#If you want to drop the legend completely
+ggp_base +
+  theme_minimal ()+
+  theme(legend.position = "none")
+```
+
+```{r}
+
+```
+
