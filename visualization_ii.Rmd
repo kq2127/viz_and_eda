@@ -7,9 +7,10 @@ output: github_document
 
 ```{r}
 knitr::opts_chunk$set(echo = TRUE)
-
+#Code above is for general preferences of all plots going forward. 
 library(tidyverse)
 library(ggridges)
+library(patchwork)
 ```
 
 ## Create Weather Data
@@ -163,7 +164,7 @@ ggp_base +
 ```{r}
 #If you want a black and white back drop
 ggp_base +
-  theme_bw ()+
+  theme_bw() +
   theme(legend.position = "bottom")
 ```
 
@@ -182,6 +183,92 @@ ggp_base +
   theme_minimal ()+
   theme(legend.position = "none")
 ```
+
+(where do my warnings come from)
+```{r}
+weather_df %>% 
+  filter(is.na(tmin))
+```
+
+## More than one data set
+
+```{r}
+central_park =
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waikiki = 
+  weather_df %>% 
+  filter(name == "Waikiki_HA")
+
+ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp)) +
+  geom_line(data = central_park)
+
+#we have a plot with just one data set and then stacked another data set into the original data set
+```
+
+(brief aside about colors)
+
+```{r}
+# regular code
+waikiki %>% 
+  ggplot(aes(x=date, y =tmax, color= name))+
+  geom_point()
+
+#code for assigning the data points a sepcific color, specify color in geomtery that takes this value
+waikiki %>% 
+  ggplot(aes(x=date, y =tmax))+
+  geom_point(color = "blue")
+```
+
+## Multi-panel plot
+
+```{r}
+ggp_scatter =
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax))+
+  geom_point()
+
+ggp_density =
+  weather_df %>% 
+  ggplot(aes(x = tmin))+
+  geom_density()
+
+ggp_box = 
+  weather_df %>% 
+  ggplot(aes(x = name, y = tmax, color = name))+
+  geom_boxplot()
+
+ggp_scatter + ggp_density
+
+#This will make a scater plot next to density plus, add additional planel with + and put one on bottom using "/"
+
+ggp_scatter + (ggp_density/ggp_box)
+
+#not only way, can use grid arrange but teach doesnt like it
+
+```
+
+## Data Manipulation
+
+```{r}
+ggp_box = 
+  weather_df %>% 
+  ggplot(aes(x = name, y = tmax, color = name))+
+  geom_boxplot()
+#change order of factors to change order of plt
+
+weather_df %>% 
+  mutate(
+    name = factor(name),
+    name = fct_relevel(name, "Waikiki_HA", "CentralPark_NY")) %>%
+  ggplot(aes(x = name, y = tmax, color = name))+
+  geom_boxplot()
+  
+```
+
+Reorder instead of rlevel
 
 ```{r}
 

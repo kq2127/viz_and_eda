@@ -5,18 +5,18 @@ Kristal Quispe
 
 ``` r
 knitr::opts_chunk$set(echo = TRUE)
-
+#Code above is for general preferences of all plots going forward. 
 library(tidyverse)
 ```
 
-    ## -- Attaching packages -------------- tidyverse 1.2.1 --
+    ## -- Attaching packages ------------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
 
     ## v ggplot2 3.2.1     v purrr   0.3.2
     ## v tibble  2.1.3     v dplyr   0.8.3
     ## v tidyr   1.0.0     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.4.0
 
-    ## -- Conflicts ----------------- tidyverse_conflicts() --
+    ## -- Conflicts ---------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -30,6 +30,10 @@ library(ggridges)
     ## The following object is masked from 'package:ggplot2':
     ## 
     ##     scale_discrete_manual
+
+``` r
+library(patchwork)
+```
 
 ## Create Weather Data
 
@@ -247,7 +251,7 @@ ggp_base +
 ``` r
 #If you want a black and white back drop
 ggp_base +
-  theme_bw ()+
+  theme_bw() +
   theme(legend.position = "bottom")
 ```
 
@@ -280,3 +284,145 @@ ggp_base +
     ## Warning: Removed 15 rows containing missing values (geom_point).
 
 ![](visualization_ii_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+(where do my warnings come from)
+
+``` r
+weather_df %>% 
+  filter(is.na(tmin))
+```
+
+    ## # A tibble: 15 x 6
+    ##    name       id          date        prcp  tmax  tmin
+    ##    <chr>      <chr>       <date>     <dbl> <dbl> <dbl>
+    ##  1 Waikiki_HA USC00519397 2017-04-17     5  28.3    NA
+    ##  2 Waikiki_HA USC00519397 2017-05-09    NA  NA      NA
+    ##  3 Waikiki_HA USC00519397 2017-05-26    NA  NA      NA
+    ##  4 Waikiki_HA USC00519397 2017-07-19    NA  NA      NA
+    ##  5 Waikiki_HA USC00519397 2017-10-07     0  31.1    NA
+    ##  6 Waikiki_HA USC00519397 2017-10-09     0  28.9    NA
+    ##  7 Waikiki_HA USC00519397 2017-10-10    10  31.7    NA
+    ##  8 Waikiki_HA USC00519397 2017-10-12     0  31.1    NA
+    ##  9 Waikiki_HA USC00519397 2017-10-13     0  31.1    NA
+    ## 10 Waikiki_HA USC00519397 2017-10-16     5  30      NA
+    ## 11 Waikiki_HA USC00519397 2017-10-18     0  29.4    NA
+    ## 12 Waikiki_HA USC00519397 2017-10-20    13  30.6    NA
+    ## 13 Waikiki_HA USC00519397 2017-10-21     0  30      NA
+    ## 14 Waikiki_HA USC00519397 2017-10-22     0  30      NA
+    ## 15 Waikiki_HA USC00519397 2017-12-22     0  26.7    NA
+
+## More than one data set
+
+``` r
+central_park =
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waikiki = 
+  weather_df %>% 
+  filter(name == "Waikiki_HA")
+
+ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp)) +
+  geom_line(data = central_park)
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+#we have a plot with just one data set and then stacked another data set into the original data set
+```
+
+(brief aside about colors)
+
+``` r
+# regular code
+waikiki %>% 
+  ggplot(aes(x=date, y =tmax, color= name))+
+  geom_point()
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+#code for assigning the data points a sepcific color, specify color in geomtery that takes this value
+waikiki %>% 
+  ggplot(aes(x=date, y =tmax))+
+  geom_point(color = "blue")
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+
+## Multi-panel plot
+
+``` r
+ggp_scatter =
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax))+
+  geom_point()
+
+ggp_density =
+  weather_df %>% 
+  ggplot(aes(x = tmin))+
+  geom_density()
+
+ggp_box = 
+  weather_df %>% 
+  ggplot(aes(x = name, y = tmax, color = name))+
+  geom_boxplot()
+
+ggp_scatter + ggp_density
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+    ## Warning: Removed 15 rows containing non-finite values (stat_density).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+#This will make a scater plot next to density plus, add additional planel with + and put one on bottom using "/"
+
+ggp_scatter + (ggp_density/ggp_box)
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+    
+    ## Warning: Removed 15 rows containing non-finite values (stat_density).
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_boxplot).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+
+``` r
+#not only way, can use grid arrange but teach doesnt like it
+```
+
+## Data Manipulation
+
+``` r
+ggp_box = 
+  weather_df %>% 
+  ggplot(aes(x = name, y = tmax, color = name))+
+  geom_boxplot()
+#change order of factors to change order of plt
+
+weather_df %>% 
+  mutate(
+    name = factor(name),
+    name = fct_relevel(name, "Waikiki_HA", "CentralPark_NY")) %>%
+  ggplot(aes(x = name, y = tmax, color = name))+
+  geom_boxplot()
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_boxplot).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+Reorder instead of rlevel
