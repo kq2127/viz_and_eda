@@ -9,14 +9,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-    ## -- Attaching packages ------------------------------------------------------------------------------------------------------- tidyverse 1.2.1 --
+    ## -- Attaching packages -------------------------------- tidyverse 1.2.1 --
 
     ## v ggplot2 3.2.1     v purrr   0.3.2
     ## v tibble  2.1.3     v dplyr   0.8.3
     ## v tidyr   1.0.0     v stringr 1.4.0
     ## v readr   1.3.1     v forcats 0.4.0
 
-    ## -- Conflicts ---------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
+    ## -- Conflicts ----------------------------------- tidyverse_conflicts() --
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -426,3 +426,100 @@ weather_df %>%
 ![](visualization_ii_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 Reorder instead of rlevel
+
+``` r
+weather_df %>% 
+  mutate(
+    name = factor(name),
+    name = fct_reorder(name, tmax)) %>%
+  ggplot(aes(x = name, y = tmax, color = name)) +
+  geom_boxplot()
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_boxplot).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
+#Here we are reordering by tmax, lowest to highest t max
+```
+
+## Restructure then plot
+
+``` r
+#Plots for density of min temp of all locations and the max temp of all locations. 
+weather_df %>% 
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation",
+    values_to = "temperture"
+  ) %>% 
+  ggplot(aes(x = temperture, fill = observation)) +
+  geom_density(alpha = .5) +
+  facet_grid(~name) +
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: Removed 18 rows containing non-finite values (stat_density).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi") %>%
+  select(id, visit, everything()) %>%
+  mutate(visit = recode(visit, "bl" = "00m"),
+         visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>%
+  arrange(id, visit)
+
+ggplot(pulse_data, aes(x = visit, y = bdi)) + 
+  geom_boxplot()
+```
+
+    ## Warning: Removed 879 rows containing non-finite values (stat_boxplot).
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+#factor is now going in alphabetical order, prior to tidying the data tideying makes this easier. 
+```
+
+litter and pups
+
+``` r
+pup_data = 
+  read_csv("./data/FAS_pups.csv", col_types = "ciiiii") %>%
+  janitor::clean_names() %>%
+  mutate(sex = recode(sex, `1` = "male", `2` = "female")) 
+
+litter_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  separate(group, into = c("dose", "day_of_tx"), sep = 3) %>%
+  mutate(wt_gain = gd18_weight - gd0_weight,
+         day_of_tx = as.numeric(day_of_tx))
+
+fas_data = left_join(pup_data, litter_data, by = "litter_number") 
+
+
+fas_data %>% 
+  select(sex, dose, day_of_tx, pd_ears:pd_walk) %>% 
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome", 
+    values_to = "pn_day") %>% 
+  drop_na() %>% 
+  mutate(outcome = forcats::fct_reorder(outcome, day_of_tx, median)) %>% 
+  ggplot(aes(x = dose, y = pn_day)) + 
+  geom_violin() + 
+  facet_grid(day_of_tx ~ outcome)
+```
+
+![](visualization_ii_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
