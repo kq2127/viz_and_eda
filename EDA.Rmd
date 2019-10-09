@@ -50,3 +50,242 @@ weather_df =
 
 ```
 
+## Group By and counting 
+
+```{r}
+weather_df %>% 
+  group_by(name, month)
+```
+
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(n_obs = n())
+#n() is for number of rows
+```
+
+```{r}
+#You can also group by two variables
+
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(n_obs = n())
+#n() is for number of rows
+```
+
+
+```{r}
+weather_df %>% 
+  group_by(month) %>% 
+  summarize(
+    n_obs = n(),
+    n_unique = n_distinct(date))
+
+```
+
+
+other wasys to count things
+```{r}
+weather_df %>% 
+  count(name)
+
+#you can also count by name and month
+
+weather_df %>% 
+  count(name, month)
+```
+
+
+```{r, eval = FALSE}
+#Base R table function is bad, dont use. table doesn't work on data frames so you have to use pull first. 
+weather_df %>% 
+  pull(name) %>% 
+  table()
+```
+
+
+(lets make a nice table)
+
+```{r}
+weather_df %>% 
+  count(name) %>% 
+  knitr::kable()
+#kable takes a table and makes it like a knitter table, nice r markdown down table. 
+```
+
+## 2X2 tables
+a digression...
+
+```{r}
+weather_df %>% 
+  filter(name != "Waikiki_HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax <  5 ~ "cold",
+      tmax >= 5 ~ "not cold",
+      TRUE      ~"" #anything else that is is true will be blank
+    )
+  ) %>% 
+  group_by(name, cold) %>% 
+  count() %>% 
+  pivot_wider(
+    names_from = cold,
+    values_from = n
+  )
+```
+
+other way to make the 2 by 2 table...
+
+```{r}
+weather_df %>% 
+  filter(name != "Waikiki_HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax <  5 ~ "cold",
+      tmax >= 5 ~ "not cold",
+      TRUE      ~"" #anything else that is is true will be blank
+    )
+  ) %>% 
+  janitor::tabyl(name,cold)
+```
+
+
+## general summaries
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(
+    n = n(),
+    mean_tmax = mean(tmax),
+    sd_tmax = sd(tmax),
+    median_prcp = median(prcp)
+  )
+```
+
+```{r}
+weather_df %>% 
+  filter(is.na(tmax))
+#3 rows in the waikiki data set has NA values. By default anytime you comupte a mean, median or sd of a vairable that has NA, R will return NA, b/c we cant take the mean/median/sd of a value that doesnt exist. 
+
+#Options to avoid this is to drop the rows with NA values
+```
+
+#Options to avoid this is to drop the rows with NA values. Can use drop.na or do code below (na.rm =TRUE)
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarize(
+    n = n(),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    sd_tmax = sd(tmax, na.rm = TRUE),
+    median_prcp = median(prcp, na.rm = TRUE)
+  )
+```
+
+for grouping by more than one variable
+```{r, eval = FALSE}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    n = n(),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    sd_tmax = sd(tmax, na.rm = TRUE),
+    median_prcp = median(prcp, na.rm = TRUE)
+  )
+```
+
+make a plot where x avis is month and y month axis is mean t max 
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    n = n(),
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    sd_tmax = sd(tmax, na.rm = TRUE),
+    median_prcp = median(prcp, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name))+
+  geom_point() + geom_line()
+```
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(digits = 1)
+
+```
+
+## Grouped mutate
+
+dont forget you can ungroup
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  ungroup()
+```
+
+```{r}
+#when you use group by and sumarize you get a new data frame with the number of rows equals the number of group, and the columns are the things we are summarizing by
+
+#since mutate happen after the group by statement, the mutate will be group specific.
+
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rn = TRUE),
+    centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+    geom_point() 
+  
+```
+
+window function un grouped mutates...
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  mutate(temp_ranking = min_rank(tmax)) %>% 
+  filter(temp_ranking == 1)
+
+weather_df %>%
+  group_by(name, month) %>%
+  filter(min_rank(tmax) < 2)
+
+weather_df %>%
+  group_by(name, month) %>%
+  filter(min_rank(desc(tmax)) < 4)
+
+```
+
+
+lags and leads...
+```{r}
+#here we are asking how much the tmax variable changed from one day to another. what was that difference, was it large or small. geared towards answersing which dataset has biggest variarblity
+
+weather_df %>%
+  group_by(name) %>%
+  mutate(
+    lagged_tmax = lag(tmax),
+    one_day_change = tmax -lagged_tmax) %>% 
+  summarize(sd_daily_change = sd(one_day_change, na.rm = TRUE))
+
+#CENTRAL PARK HAS THE MOST VARIABLITY IN DAILY TEMPERTURE
+
+
+weather_df %>%
+  group_by(name) %>%
+  mutate(temp_change = tmax - lag(tmax)) %>%
+  summarize(temp_change_sd = sd(temp_change, na.rm = TRUE),
+            temp_change_max = max(temp_change, na.rm = TRUE))
+```
+
